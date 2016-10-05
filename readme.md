@@ -20,7 +20,7 @@ version: '2'
 services:
   # PHP
   app:
-    image: ambientum/php:7.0-apache # choose yout tag here
+    image: josevieirame/php:7.0-apache # choose yout tag here
     container_name: sandbox-app
     volumes:
       - .:/var/www/app
