@@ -7,15 +7,18 @@ FROM centos:7
 # Repository/Image Maintainer
 MAINTAINER José Vieira <hello@josevieira.me>
 
-# Add the ENTRYPOINT script
-ADD start.sh /scripts/start.sh
+RUN sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-Base.repo && \
+    sed -i 's/^#baseurl/baseurl/' /etc/yum.repos.d/CentOS-Base.repo && \
+    sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-fasttrack.repo && \
+    sed -i 's/^#baseurl/baseurl/' /etc/yum.repos.d/CentOS-fasttrack.repo
 
 # Install PHP From Remi, Common Extensions, Composer and then cleanup
 RUN echo "---> Updating Repository" && \
     yum install -y curl \
     wget \
     nano \
-    epel-release && \
+    epel-release \
+    sudo && \
     yum update -y
 
 RUN echo "---> Preparing and Installing PHP and Composer" && \
@@ -58,6 +61,7 @@ RUN echo "---> Adding the php-user" && \
 
 RUN echo "---> Configuring PHP" && \
     usermod -aG wheel php-user && \
+    passwd -d php-user && \
     sed -i "/user = .*/c\user = php-user" /etc/php-fpm.d/www.conf && \
     sed -i "/group = .*/c\group = php-user" /etc/php-fpm.d/www.conf && \
     sed -i "/listen-user = .*/c\listen-user = php-user" /etc/php-fpm.d/www.conf && \
@@ -73,10 +77,6 @@ RUN echo "---> Configuring PHP" && \
     sed -i "/upload_max_filesize = .*/c\upload_max_filesize = 1024M" /etc/php.ini && \
     sed -i "/zend_extension=xdebug.so/c\;zend_extension=xdebug.so" /etc/php.d/15-xdebug.ini
 
-# Dumb Init
-ADD https://github.com/krallin/tini/releases/download/v0.10.0/tini /tini
-RUN chmod +x /tini
-
 # Define the running user
 USER php-user
 
@@ -84,8 +84,6 @@ USER php-user
 WORKDIR "/var/www/app"
 
 ENV PATH=/home/php-user/.composer/vendor/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-ENTRYPOINT ["/tini", "--", "/scripts/start.sh"]
 
 # As non daemon and single base image, it may be used as cli container
 CMD ["/bin/bash"]
