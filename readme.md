@@ -25,5 +25,5 @@ services:
     volumes:
       - .:/var/www/app
     ports:
-      - "8080:80"
+      - "80:8080"
 ```
